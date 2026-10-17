@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DevWeather — Weather Intelligence Dashboard (Live Demo)</title>
+  <style>
+    :root {
+      --bg: #091316;
+      --surface: #0e2024;
+      --surface-elevated: #152f35;
+      --border: #1c3d44;
+      --text: #f0fdfa;
+      --text-muted: #99b6be;
+      --teal: #14b8a6;
+      --accent: #f59e0b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); padding-bottom: 3rem; }
+    
+    .demo-bar {
+      background: #0f2428;
+      border-bottom: 1px solid var(--border);
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .demo-bar span { font-weight: 600; font-size: 0.9rem; color: var(--teal); }
+    .demo-bar a { color: var(--accent); text-decoration: none; font-weight: 700; font-size: 0.85rem; padding: 5px 12px; background: rgba(245,158,11,0.1); border-radius: 4px; }
+    
+    .container { max-width: 960px; margin: 2rem auto; padding: 0 1rem; }
+    
+    .header-section { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .search-box { display: flex; gap: 0.5rem; flex-grow: 1; max-width: 420px; }
+    .search-box input { flex-grow: 1; padding: 0.7rem 1rem; border-radius: 99px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 0.95rem; }
+    .search-box input:focus { outline: 2px solid var(--teal); }
+    .search-box button { background: var(--teal); color: #042f2e; font-weight: 700; border: none; padding: 0.7rem 1.4rem; border-radius: 99px; cursor: pointer; }
+    
+    .unit-toggle { display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: 99px; padding: 2px; }
+    .unit-btn { background: transparent; border: none; color: var(--text-muted); padding: 0.4rem 0.8rem; border-radius: 99px; font-weight: 700; cursor: pointer; }
+    .unit-btn.active { background: var(--teal); color: #000; }
+
+    .current-card {
+      background: linear-gradient(135deg, #10292e, #0e2024);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    .current-city { font-size: 2rem; font-weight: 800; color: var(--text); margin-bottom: 0.25rem; }
+    .current-condition { font-size: 1.1rem; color: var(--teal); margin-bottom: 1.25rem; }
+    .temp-big { font-size: 3.75rem; font-weight: 800; color: var(--accent); line-height: 1; }
+    
+    .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-content: center; }
+    .metric-box { background: rgba(21,47,53,0.5); padding: 0.85rem; border-radius: 8px; border: 1px solid var(--border); }
+    .metric-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
+    .metric-val { font-size: 1.15rem; font-weight: 700; color: var(--text); margin-top: 0.2rem; }
+
+    .forecast-title { font-size: 1.35rem; margin-bottom: 1rem; color: var(--text); }
+    .forecast-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; }
+    .forecast-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; text-align: center; }
+    .forecast-day { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .forecast-icon { font-size: 2rem; margin: 0.5rem 0; }
+    .forecast-temp { font-size: 1.15rem; font-weight: 700; color: var(--accent); }
+
+    @media (max-width: 650px) {
+      .current-card { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation to Portfolio -->
+  <div class="demo-bar">
+    <span>🌤️ <strong>Live Project Demo:</strong> DevWeather Real-Time Forecast Dashboard</span>
+    <a href="../../index.html">&larr; Back to Portfolio</a>
+  </div>
+
+  <div class="container">
+    <div class="header-section">
+      <div class="search-box">
+        <input type="text" id="city-input" placeholder="Search city (e.g. Solapur, Pune, Mumbai)..." value="Solapur">
+        <button type="button" id="btn-search">Search</button>
+      </div>
+
+      <div class="unit-toggle">
+        <button type="button" class="unit-btn active" id="btn-c">&deg;C</button>
+        <button type="button" class="unit-btn" id="btn-f">&deg;F</button>
+      </div>
+    </div>
+
+    <!-- Current Weather Card -->
+    <div class="current-card">
+      <div>
+        <div class="current-city" id="disp-city">Solapur, Maharashtra</div>
+        <div class="current-condition" id="disp-cond">☀️ Mostly Sunny &bull; Mild Breeze</div>
+        <div class="temp-big" id="disp-temp">29&deg;C</div>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-box">
+          <div class="metric-label">Humidity</div>
+          <div class="metric-val" id="disp-hum">42%</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Wind Speed</div>
+          <div class="metric-val" id="disp-wind">14 km/h</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">UV Index</div>
+          <div class="metric-val" id="disp-uv">6 (Moderate)</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Air Quality</div>
+          <div class="metric-val" style="color:#10b981;">Good (AQI 45)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5-Day Forecast -->
+    <h2 class="forecast-title">5-Day Extended Forecast</h2>
+    <div class="forecast-grid" id="forecast-grid">
+      <!-- Populated via JS -->
+    </div>
+  </div>
+
+  <script>
+    const weatherData = {
+      solapur: { city: "Solapur, MH", cond: "☀️ Sunny & Clear", tempC: 30, hum: "38%", wind: "12 km/h", uv: "7 High" },
+      pune: { city: "Pune, MH", cond: "⛅ Partly Cloudy", tempC: 26, hum: "55%", wind: "16 km/h", uv: "5 Moderate" },
+      mumbai: { city: "Mumbai, MH", cond: "🌊 Humid & Breezy", tempC: 31, hum: "72%", wind: "22 km/h", uv: "6 Moderate" },
+      bengaluru: { city: "Bengaluru, KA", cond: "🌧️ Light Showers", tempC: 23, hum: "68%", wind: "18 km/h", uv: "4 Moderate" },
+      delhi: { city: "New Delhi, DL", cond: "🌤️ Clear Sky", tempC: 28, hum: "46%", wind: "10 km/h", uv: "6 Moderate" }
+    };
+
+    let isCelsius = true;
+    let currentCityKey = 'solapur';
+
+    function renderWeather() {
+      const data = weatherData[currentCityKey] || {
+        city: document.getElementById('city-input').value.toUpperCase(),
+        cond: "☀️ Clear Skies",
+        tempC: 28,
+        hum: "45%",
+        wind: "15 km/h",
+        uv: "5 Moderate"
+      };
+
+      const displayTemp = isCelsius ? `${data.tempC}°C` : `${Math.round(data.tempC * 9/5 + 32)}°F`;
+
+      document.getElementById('disp-city').textContent = data.city;
+      document.getElementById('disp-cond').textContent = data.cond;
+      document.getElementById('disp-temp').textContent = displayTemp;
+      document.getElementById('disp-hum').textContent = data.hum;
+      document.getElementById('disp-wind').textContent = data.wind;
+      document.getElementById('disp-uv').textContent = data.uv;
+
+      // 5-day forecast
+      const days = ['Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      const icons = ['☀️', '🌤️', '⛅', '🌧️', '☀️'];
+      const grid = document.getElementById('forecast-grid');
+      grid.innerHTML = '';
+
+      days.forEach((day, idx) => {
+        const offset = (idx % 2 === 0 ? 1 : -1) * (idx + 1);
+        const dayTempC = data.tempC + offset;
+        const tempText = isCelsius ? `${dayTempC}°C` : `${Math.round(dayTempC * 9/5 + 32)}°F`;
+
+        const card = document.createElement('div');
+        card.className = 'forecast-card';
+        card.innerHTML = `
+          <div class="forecast-day">${day}</div>
+          <div class="forecast-icon">${icons[idx]}</div>
+          <div class="forecast-temp">${tempText}</div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    document.getElementById('btn-search').onclick = () => {
+      const query = document.getElementById('city-input').value.trim().toLowerCase();
+      currentCityKey = weatherData[query] ? query : 'solapur';
+      renderWeather();
+    };
+
+    document.getElementById('city-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('btn-search').click();
+    });
+
+    document.getElementById('btn-c').onclick = () => {
+      isCelsius = true;
+      document.getElementById('btn-c').classList.add('active');
+      document.getElementById('btn-f').classList.remove('active');
+      renderWeather();
+    };
+
+    document.getElementById('btn-f').onclick = () => {
+      isCelsius = false;
+      document.getElementById('btn-f').classList.add('active');
+      document.getElementById('btn-c').classList.remove('active');
+      renderWeather();
+    };
+
+    renderWeather();
+  </script>
+</body>
+</html>
